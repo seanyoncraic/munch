@@ -40,7 +40,7 @@ var GameConstants = {
 // manifest of asset information
 var manifest = [
     {src:"lib/Snake.png", id:"Snake", data:{
-    width:108, height:73, regPoint:"TopLeft",
+    width:108, height:73, regPoint:"center",
     animations:{alive:[0,11], dead:[12,39]}}},
     {src:"lib/Background.png", id:"Background", data:{
     width:600, height:600, regPoint:"TopLeft",
@@ -225,32 +225,29 @@ function onTick(e) {
     // !!!!!!!!!!!!!!!!!!! TESTING FPS
     document.getElementById("fps").innerHTML = createjs.Ticker.getMeasuredFPS();
 
-
     if (!snake.getKilled()) {
         if (leftKey) {
-            //snake.left();
+            snake.go(MovingObject.LEFT);
             //snake.direction = MovingObject.LEFT;
             //snake.startMe();
         } else if (rightKey) {
-            //snake.right();
+            snake.go(MovingObject.RIGHT);
             //snake.direction = MovingObject.RIGHT;
             //snake.startMe();
         } else if (upKey) {
-            //snake.up();
+            snake.go(MovingObject.UP);
             //snake.direction = MovingObject.UP;
             //snake.startMe();
         } else if (downKey) {
-            //snake.down();
+            snake.go(MovingObject.DOWN);
             //snake.direction = MovingObject.DOWN;
             //snake.startMe();
         } else {
+            snake.stopMe();
             //snake.stop();
             //snake.stopMe();
         }
     }
-
-
-
 
     // update the stage!
 	stage.update();

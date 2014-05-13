@@ -62,6 +62,21 @@
         }
     }
 
+    Snake.prototype.go = function(direction) {
+        clip.setDirection(direction);
+        if (!clip.getMoving()) {
+            clip.gotoAndPlay("alive");
+            clip.startMe();
+        }
+    }
+
+    Snake.prototype.stopMe = function() {
+        // stop animation and movement
+        clip.stop();
+        clip.stopMe();
+    }
+
+
     // ----------------------------------------------- event handlers
     function onSlowMe(e) {
         // adjust speed of MovingObject
@@ -75,15 +90,6 @@
         console.log("slowing down! " + clip.getSpeed());
 
     }
-
-
-
-
-
-
-
-
-
 
     // add this object to the window so it is accessible anywhere in your app (like all objects)
     window.Snake = Snake;
