@@ -129,6 +129,15 @@ function onStartGame(e) {
     // initialization
     bugsEaten = 0;
 
+    // construct snake object and setup
+    snake = new Snake(stage, assetManager);
+    snake.setupMe();
+
+    // construct and setup bugtimer to drop bugs on displaylist
+    //bugDelay = 500;
+    //bugTimer = setInterval(onAddBug, bugDelay);
+
+
     /*
     // construct snake object (player)
     snake = assetManager.getClip("Snake");
@@ -137,8 +146,6 @@ function onStartGame(e) {
     //snake.stopMe();
     //snake.setupMe();
     stage.addChild(snake);
-    */
-
 
     var snake = new MovingObject(assetManager.getSpriteSheet("Snake"), stage);
     snake.x = 100;
@@ -156,28 +163,12 @@ function onStartGame(e) {
     bug.gotoAndPlay("alive");
     bug.startMe();
     stage.addChild(bug);
-
-
-    /*
-    // construct and setup bugtimer to drop bugs on displaylist
-    bugDelay = 500;
-    bugTimer = new Timer(bugDelay);
-    bugTimer.addEventListener(TimerEvent.TIMER, onAddBug);
-    bugTimer.start()
     */
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
     // add scoreboard to displaylist
     //this.addChild(scoreBoard);
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    /*
-    // construct a test bug object
-    var bug:Bug = new Bug();
-    bug.target = snake;
-    this.addChildAt(bug, this.getChildIndex(snake));
-    bug.setupMe();
-    */
 
     // current state of keys
     leftKey = false;
@@ -210,6 +201,10 @@ function onKeyUp(e) {
     else if (e.keyCode == 40) downKey = false;
 }
 
+function onAddBug(e) {
+
+}
+
 function onKillBug(e) {
 
 }
@@ -222,28 +217,37 @@ function onGameOver(e) {
 
 }
 
+function onResetGame(e) {
+
+}
+
 function onTick(e) {
     // !!!!!!!!!!!!!!!!!!! TESTING FPS
     document.getElementById("fps").innerHTML = createjs.Ticker.getMeasuredFPS();
 
 
-    //if (!snake.killed) {
+    if (!snake.getKilled()) {
         if (leftKey) {
+            //snake.left();
             //snake.direction = MovingObject.LEFT;
             //snake.startMe();
         } else if (rightKey) {
+            //snake.right();
             //snake.direction = MovingObject.RIGHT;
             //snake.startMe();
         } else if (upKey) {
+            //snake.up();
             //snake.direction = MovingObject.UP;
             //snake.startMe();
         } else if (downKey) {
+            //snake.down();
             //snake.direction = MovingObject.DOWN;
             //snake.startMe();
         } else {
+            //snake.stop();
             //snake.stopMe();
         }
-    //}
+    }
 
 
 
