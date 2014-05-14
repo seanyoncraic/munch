@@ -78,8 +78,8 @@ var AssetManager = function() {
 	preloader = new createjs.LoadQueue();
 
 	// construct custom event object and initialize it
-	var eventAssetLoaded = new CustomEvent("onAssetLoaded");
-	var eventAllLoaded = new CustomEvent("onAssetsLoaded");
+	var eventAssetLoaded = new createjs.Event("onAssetLoaded");
+	var eventAllLoaded = new createjs.Event("onAssetsLoaded");
 
 	// ------------------------------------------------------ event handlers
 	onLoaded = function(e) {
@@ -130,7 +130,7 @@ var AssetManager = function() {
         // keeping track of how many loaded?
         counter++;
         // an asset has been loaded
-        document.dispatchEvent(eventAssetLoaded);
+        stage.dispatchEvent(eventAssetLoaded);
         console.log("asset loaded: " + e.result.src);
 	};
 
@@ -142,7 +142,7 @@ var AssetManager = function() {
 	onComplete = function(e) {
 		if (counter >= total) {
 			// dispatch event that all assets are loaded
-			document.dispatchEvent(eventAllLoaded);
+			stage.dispatchEvent(eventAllLoaded);
         }
 	};
 

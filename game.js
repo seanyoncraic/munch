@@ -6,12 +6,22 @@
 // add challenge to take this game and add sound effects?
 // javascript timers (setInterval() and setTimeout())
 // there is no width and height for sprites - you need to use getBounds().width, etc. Add to MovingObject class lesson
+// to approaches to object orientation in JS - prototype and closure http://stackoverflow.com/questions/1595611/how-to-properly-create-a-custom-object-in-javascript
+// demo a central game event listener much like I did in biplane 3
+// two things not supported by createjs - keyboard listeners and timers (setInterval())
+// must find third part pixel perfect collision detection tool
+// collision detection using hittest (localToGlobal, etc) http://www.createjs.com/tutorials/HitTest/
+// radius collision detection and others http://devmag.org.za/2009/04/13/basic-collision-detection-in-2d-part-1/
 
 // TODO
 // > change assetmanager of Tic Tac Toe so the manifest is external
 // > assetmanager now includes count property in data so that you can specify the number of frames for the sprite. If this is excluded it is calculated
 // based on the side of the spritesheet image. If you have any blank frames in your spritesheet they will be added to the animation. Count counters this.
 // only an issue if you don't specify the animations
+// Fix custom events in biplane 3 to new createjs.Event("name",true)
+// Add feature to asset manager to load json
+// get rid of dimensions and hard code it?
+
 
 
 // Munch implemented in HTML5
@@ -52,7 +62,7 @@ var manifest = [
     width:222, height:45, regPoint:"TopLeft",
     animations:{}}},
     {src:"lib/Bug.png", id:"Bug", data:{
-    width:30, height:38, regPoint:"TopLeft",
+    width:30, height:38, regPoint:"center",
     animations:{alive:[0,11], dead:[12,29]}}}
 ];
 
@@ -68,16 +78,12 @@ function onInit() {
 	// create stage object
     stage = new createjs.Stage(canvas);
 
-
-    console.log("stage: " + stage.canvas.width);
-
-
     // enable mouseover events for the stage - disabled by default since they can be expensive
     stage.enableMouseOver();
 
 	// construct preloader object to load spritesheet and sound assets
 	assetManager = new AssetManager();
-    document.addEventListener("onAssetsLoaded", onSetup);
+    stage.addEventListener("onAssetsLoaded", onSetup);
     // load the assets
 	assetManager.loadAssets(manifest);
 }
@@ -85,7 +91,7 @@ function onInit() {
 function onSetup() {
 	console.log(">> setup");
 	// kill event listener
-	document.removeEventListener("onAssetsLoaded", onSetup);
+	stage.removeEventListener("onAssetsLoaded", onSetup);
 
     // construct game objects
     background = assetManager.getClip("Background");
@@ -95,6 +101,10 @@ function onSetup() {
     introCaption.y = 50;
     stage.addChild(introCaption);
     gameOverCaption = assetManager.getClip("GameOverCaption");
+    gameOverCaption.x = 50;
+    gameOverCaption.y = 50;
+    snake = new Snake(stage, assetManager);
+    snake.resetMe();
 
     /*
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
@@ -104,24 +114,11 @@ function onSetup() {
     */
 
     // setup event listener to start game
-    background.on("click", onStartGame, this);
-
-    // setup game event listeners
-    document.addEventListener("onMoveDiagonalOffStage", onKillBug);
-    document.addEventListener("onBugEaten", onBugEaten);
-	document.addEventListener("onSnakeKilled", onGameOver);
-
-    /*
-    // ?????????????????????? TESTING
-    snake = assetManager.getClip("Snake");
-    snake.x = 0;
-    snake.y = 0;
-    snake.gotoAndPlay("alive");
-    stage.addChild(snake);
-    */
-
+    background.addEventListener("click", onStartGame);
+    // setup game event listeners to listen on the capture phase
+    stage.addEventListener("onBugEaten", onBugEaten, true);
+	stage.addEventListener("onSnakeKilled", onGameOver, true);
     stage.update();
-
 }
 
 function onStartGame(e) {
@@ -129,41 +126,15 @@ function onStartGame(e) {
     // initialization
     bugsEaten = 0;
 
-    // construct snake object and setup
-    snake = new Snake(stage, assetManager);
-    snake.setupMe();
+    // remove click event on background
+    background.removeEventListener("click", onStartGame);
+
+    // start the snake object
+    snake.startMe();
 
     // construct and setup bugtimer to drop bugs on displaylist
-    //bugDelay = 500;
-    //bugTimer = setInterval(onAddBug, bugDelay);
-
-
-    /*
-    // construct snake object (player)
-    snake = assetManager.getClip("Snake");
-    snake.gotoAndPlay("alive");
-    // stop snake moving by default
-    //snake.stopMe();
-    //snake.setupMe();
-    stage.addChild(snake);
-
-    var snake = new MovingObject(assetManager.getSpriteSheet("Snake"), stage);
-    snake.x = 100;
-    snake.y = 100;
-    snake.setDirection(MovingObject.DOWN);
-    snake.gotoAndPlay("alive");
-    snake.startMe();
-    stage.addChild(snake);
-
-
-    var bug = new MovingDiagonalObject(assetManager.getSpriteSheet("Bug"), stage);
-    bug.x = 200;
-    bug.y = 200;
-    bug.rotation = 45;
-    bug.gotoAndPlay("alive");
-    bug.startMe();
-    stage.addChild(bug);
-    */
+    bugDelay = 500;
+    bugTimer = setInterval(onAddBug, bugDelay);
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
     // add scoreboard to displaylist
@@ -182,7 +153,7 @@ function onStartGame(e) {
 
     // startup the ticker
     createjs.Ticker.setFPS(GameConstants.FRAME_RATE);
-    createjs.Ticker.on("tick", onTick, this);
+    createjs.Ticker.addEventListener("tick", onTick);
 }
 
 function onKeyDown(e) {
@@ -202,29 +173,76 @@ function onKeyUp(e) {
 }
 
 function onAddBug(e) {
-
-}
-
-function onKillBug(e) {
-
+    // add bug to the stage
+    var bug = new Bug(stage, assetManager, snake);
+    bug.startMe();
 }
 
 function onBugEaten(e) {
+    // increment bug counter
+    bugsEaten++;
+    // energize the snake with energy
+    snake.energizeMe();
+
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
+    // update scoreboard
+    //scoreBoard.snakeSpeed = snake.speed;
+    //scoreBoard.bugs = bugs;
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    // decrease the amount of bugs on the screen every ten bugs eaten
+    if ((bugsEaten % 10) == 0) {
+        bugDelay = bugDelay + 500;
+        bugTimer.delay = bugDelay;
+    }
+
+    console.log("onBugEaten");
 
 }
 
 function onGameOver(e) {
 
+    console.log("onGameOver");
+
+    // gameOver
+    clearInterval(bugTimer);
+    stage.addChild(gameOverCaption);
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
+    //this.removeChild(scoreBoard);
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    // add listener to reset game when click background
+    background.addEventListener("click", onResetGame);
+
+    // remove all listeners
+	document.removeEventListener("keydown", onKeyDown);
+	document.removeEventListener("keyup", onKeyUp);
+    createjs.Ticker.off("tick", onTick);
 }
 
 function onResetGame(e) {
+    // kill event listener and add listener to start a new game again
+    background.removeEventListener("click", onResetGame);
+    background.addEventListener("click", onStartGame);
 
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
+    //scoreBoard.resetMe();
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    // reset the snake
+    snake.resetMe();
+
+    // adjust caption on screen
+    stage.removeChild(gameOverCaption);
+    stage.addChild(introCaption);
+    stage.update();
 }
 
 function onTick(e) {
-    // !!!!!!!!!!!!!!!!!!! TESTING FPS
+    // TESTING FPS
     document.getElementById("fps").innerHTML = createjs.Ticker.getMeasuredFPS();
 
+    // only monitor keyboard if snake is alive
     if (!snake.getKilled()) {
         if (leftKey) {
             snake.go(MovingObject.LEFT);

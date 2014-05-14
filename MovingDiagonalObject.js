@@ -16,19 +16,20 @@
     window.MovingDiagonalObject = MovingDiagonalObject;
 
     // ------------------------------------------------ public properties
-    // static constant hacking by adding them on as property of object
+    // using the prototype method means EVERYTHING is public - sucky but easier to do inheritance than closure
 
     // reference to the stage object
-    var stage = null;
-    var speed = 0;
-    var xDisplace = 0;
-    var yDisplace = 0;
-    var dimensions = null;
+    MovingDiagonalObject.prototype.stage = null;
+    MovingDiagonalObject.prototype.speed = 0;
+    MovingDiagonalObject.prototype.xDisplace = 0;
+    MovingDiagonalObject.prototype.yDisplace = 0;
+    MovingDiagonalObject.prototype.dimensions = null;
 
     // construct custom event object for object moving off stage
-    var eventOffStage = new CustomEvent("onMovingDiagonalObjectOffStage");
+    MovingDiagonalObject.prototype.eventOffStage = new createjs.Event("onMovingDiagonalObjectOffStage", true);
+
     // private variables
-    var tickerListener = null;
+    MovingDiagonalObject.prototype.tickerListener = null;
 
     // ------------------------------------------------ constructor method
     // define initialize method for MovingDiagonalObject
@@ -39,18 +40,10 @@
         // ...
 
         // initialization
-        stage = myStage;
-        speed = 2;
-        dimensions = this.getBounds();
+        this.stage = myStage;
+        this.speed = 2;
+        this.dimensions = this.getBounds();
         this.stop();
-    };
-
-    // ------------------------------------------------ get/set methods
-    MovingDiagonalObject.prototype.getSpeed = function() {
-        return speed;
-    };
-    MovingDiagonalObject.prototype.setSpeed = function(value) {
-        speed = value;
     };
 
     // ------------------------------------------------ private methods
@@ -63,28 +56,27 @@
         // convert current rotation of object to radians
         var radians = radianMe(this.rotation);
         // calculating X and Y displacement
-        xDisplace = Math.cos(radians) * speed;
-        yDisplace = Math.sin(radians) * speed;
-
+        this.xDisplace = Math.cos(radians) * this.speed;
+        this.yDisplace = Math.sin(radians) * this.speed;
         this.play();
         // setup listener to listen for ticker to control animation
-        tickerListener = createjs.Ticker.on("tick", this.onMove, this);
+        this.tickerListener = createjs.Ticker.on("tick", this.onMove, this);
     };
 
     MovingDiagonalObject.prototype.stopMe = function() {
         this.stop();
-        createjs.Ticker.off("tick", tickerListener);
+        createjs.Ticker.off("tick", this.tickerListener);
     };
 
     // ------------------------------------------------ event handlers
     MovingDiagonalObject.prototype.onMove = function(e) {
         // move sprite
-        this.x = this.x + xDisplace;
-        this.y = this.y + yDisplace;
+        this.x = this.x + this.xDisplace;
+        this.y = this.y + this.yDisplace;
 
         // check if object is off the stage
-        if ((this.x < -dimensions.width) || (this.x > (stage.canvas.width + dimensions.width)) || (this.y < -dimensions.height) || (this.y > (stage.canvas.height + dimensions.height))) {
-            document.dispatchEvent(eventOffStage);
+        if ((this.x < -this.dimensions.width) || (this.x > (this.stage.canvas.width + this.dimensions.width)) || (this.y < -this.dimensions.height) || (this.y > (this.stage.canvas.height + this.dimensions.height))) {
+            this.dispatchEvent(this.eventOffStage);
         }
     };
 
