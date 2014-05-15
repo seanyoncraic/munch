@@ -43,7 +43,7 @@ var gameConstants = {
 // manifest of asset information
 var manifest = [
     {src:"lib/Snake.png", id:"Snake", data:{
-    width:108, height:73, regPoint:"center",
+    width:150, height:98, regPoint:"center",
     animations:{alive:[0,11], dead:[12,39]}}},
     {src:"lib/Background.png", id:"Background", data:{
     width:600, height:600, regPoint:"TopLeft",
@@ -216,8 +216,9 @@ function onResetGame(e) {
     background.removeEventListener("click", onResetGame);
     background.addEventListener("click", onStartGame);
 
-    // reset the snake
+    // reset the snake and user interface
     snake.resetMe();
+    userInterface.startMe();
 
     // adjust caption on screen
     stage.removeChild(gameOverCaption);

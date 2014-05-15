@@ -2,13 +2,13 @@ var Bug = function(myStage, myAssetManager, mySnake) {
     // initialization
     var stage = myStage;
     var assetManager = myAssetManager;
-    var snake = mySnake.getClip();
+    var snakeClip = mySnake.getClip();
     var tickerListener = null;
 
     // construct clip for this object and add to stage
     var clip = new MovingDiagonalObject(assetManager.getSpriteSheet("Bug"), stage);
     // add bugs so they are below the snake (snake)
-    stage.addChildAt(clip, stage.getChildIndex(snake));
+    stage.addChildAt(clip, stage.getChildIndex(snakeClip));
 
     // get bounds of sprite so we can determine width / height
     var dimensions = clip.getBounds();
@@ -55,18 +55,59 @@ var Bug = function(myStage, myAssetManager, mySnake) {
     function onCollisionTest(e) {
         // only do collision test on every other tick to save on processing
         if (createjs.Ticker.getTicks() % 2 == 0) {
+
+            /*
+            // LESSON COLLISION DETECTION
             // radius collision detection
             // Calculate difference between centres
-            var distX = snake.x - clip.x;
-            var distY = snake.y - clip.y;
+            var distX = snakeClip.x - clip.x;
+            var distY = snakeClip.y - clip.y;
             // Get distance with Pythagoras
             var dist = Math.sqrt((distX * distX) + (distY * distY))
-            // 69 is the sum of the radius
-            if (dist <= 40) {
+            // bug has a radius of 19
+            // snake has a radius of 75
+            // force the radius of the circle on the snake to only be 5
+            // sum of 5 + 19 = 24
+            if (dist <= 24) {
                 // collision detection with snake
                 clip.dispatchEvent(eventBugEaten);
                 killMe();
             }
+            */
+
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
+            // radius collision detection
+            // Calculate difference between centres
+            var distX = 0;
+            var distY = 0;
+            var direction = snakeClip.direction;
+            // transform circle depending on direction of snake so it is always over the head
+            if (direction == MovingObject.LEFT) {
+                distX = snakeClip.x - 32 - clip.x;
+                distY = snakeClip.y - clip.y;
+            } else if (direction == MovingObject.RIGHT) {
+                distX = snakeClip.x + 32 - clip.x;
+                distY = snakeClip.y - clip.y;
+            } else if (direction == MovingObject.UP) {
+                distX = snakeClip.x - clip.x;
+                distY = snakeClip.y - 32 - clip.y;
+            } else {
+                distX = snakeClip.x - clip.x;
+                distY = snakeClip.y + 32 - clip.y;
+            }
+
+            // Get distance with Pythagoras
+            var dist = Math.sqrt((distX * distX) + (distY * distY))
+            // bug has a radius of 19
+            // snake has a radius of 75
+            // force the radius of the circle on the snake to only be 5
+            // sum of 5 + 19 = 24
+            if (dist <= 24) {
+                // collision detection with snake
+                clip.dispatchEvent(eventBugEaten);
+                killMe();
+            }
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         }
     }
 
