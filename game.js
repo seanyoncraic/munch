@@ -1,18 +1,3 @@
-// IDEAS FOR LESSONS FOR COURSE
-// lesson on over git and github with students for brackets
-// add BitmapText and Text classes to the textfields lesson
-// const is supported in firefox and chrome. Safari and Opera allow it but take it as a var. IE 10 is not supported but IE 11 does
-// using ZOE for spritesheet generation (http://www.youtube.com/watch?v=uUX2E-otOUc) - note on how to place your registration point and all assets must be in main timeline with frame labels to define different animations. Generates JSON that can be used with AssetManager so ALL assets are in one spritesheet. See lib folder of HTML5 Munch
-// add challenge to take this game and add sound effects?
-// javascript timers (setInterval() and setTimeout())
-// there is no width and height for sprites - you need to use getBounds().width, etc. Add to MovingObject class lesson
-// to approaches to object orientation in JS - prototype and closure http://stackoverflow.com/questions/1595611/how-to-properly-create-a-custom-object-in-javascript
-// demo a central game event listener much like I did in biplane 3
-// two things not supported by createjs - keyboard listeners and timers (setInterval())
-// must find third part pixel perfect collision detection tool
-// collision detection using hittest (localToGlobal, etc) http://www.createjs.com/tutorials/HitTest/
-// radius collision detection and others http://devmag.org.za/2009/04/13/basic-collision-detection-in-2d-part-1/
-
 // TODO
 // > change assetmanager of Tic Tac Toe so the manifest is external
 // > assetmanager now includes count property in data so that you can specify the number of frames for the sprite. If this is excluded it is calculated
@@ -21,6 +6,10 @@
 // Fix custom events in biplane 3 to new createjs.Event("name",true)
 // Add feature to asset manager to load json
 // get rid of dimensions and hard code it?
+// scoreboard added
+// check GameConstants in betting game - used in RaceScreen but not passed in???
+// figure out standard for window.gameConstants for accessing globals
+// does snake class need getClip() method anymore?
 
 
 
@@ -41,10 +30,14 @@ var bugDelay = 0;
 var bugsEaten = 0;
 
 // object to preload and handle all assets (spritesheet and sounds)
-var assetManager, introCaption, background, snake, gameOverCaption, scoreBoard;
+var assetManager, introCaption, background, snake, gameOverCaption;
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
+var userInterface;
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-var GameConstants = {
-	"FRAME_RATE":26
+var gameConstants = {
+	"FRAME_RATE":26,
+    "SNAKE_MAX_SPEED":5
 };
 
 // manifest of asset information
@@ -63,7 +56,10 @@ var manifest = [
     animations:{}}},
     {src:"lib/Bug.png", id:"Bug", data:{
     width:30, height:38, regPoint:"center",
-    animations:{alive:[0,11], dead:[12,29]}}}
+    animations:{alive:[0,11], dead:[12,29]}}},
+    {src:"lib/UserInterface.png", id:"UserInterface", data:{
+    width:161, height:19, regPoint:"TopLeft",
+    animations:{}}}
 ];
 
 // ------------------------------------------------------------ event handlers
@@ -103,15 +99,14 @@ function onSetup() {
     gameOverCaption = assetManager.getClip("GameOverCaption");
     gameOverCaption.x = 50;
     gameOverCaption.y = 50;
-    snake = new Snake(stage, assetManager);
+    snake = new Snake(stage, assetManager, gameConstants);
     snake.resetMe();
 
-    /*
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
-    scoreBoard = new ScoreBoard();
-    this.addEventListener(Snake.SNAKE_SLOWED, onSnakeSlowed, true);
+    userInterface = new UserInterface(stage, assetManager);
+    userInterface.startMe();
+    stage.addEventListener("onSnakeSpeedChange", onSnakeSpeedChange, true);
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    */
 
     // setup event listener to start game
     background.addEventListener("click", onStartGame);
@@ -136,11 +131,6 @@ function onStartGame(e) {
     bugDelay = 500;
     bugTimer = setInterval(onAddBug, bugDelay);
 
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
-    // add scoreboard to displaylist
-    //this.addChild(scoreBoard);
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
     // current state of keys
     leftKey = false;
     rightKey = false;
@@ -152,7 +142,7 @@ function onStartGame(e) {
 	document.addEventListener("keyup", onKeyUp);
 
     // startup the ticker
-    createjs.Ticker.setFPS(GameConstants.FRAME_RATE);
+    createjs.Ticker.setFPS(gameConstants.FRAME_RATE);
     createjs.Ticker.addEventListener("tick", onTick);
 }
 
@@ -185,13 +175,11 @@ function onBugEaten(e) {
     snake.energizeMe();
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
-    // update scoreboard
-    //scoreBoard.snakeSpeed = snake.speed;
-    //scoreBoard.bugs = bugs;
+    userInterface.setBugsEaten(bugsEaten);
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     // decrease the amount of bugs on the screen every ten bugs eaten
-    if ((bugsEaten % 10) == 0) {
+    if ((bugsEaten % 10) === 0) {
         bugDelay = bugDelay + 500;
         bugTimer.delay = bugDelay;
     }
@@ -200,6 +188,12 @@ function onBugEaten(e) {
 
 }
 
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
+function onSnakeSpeedChange(e) {
+    userInterface.setSnakeSpeed(e.target.speed);
+}
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 function onGameOver(e) {
 
     console.log("onGameOver");
@@ -207,9 +201,6 @@ function onGameOver(e) {
     // gameOver
     clearInterval(bugTimer);
     stage.addChild(gameOverCaption);
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
-    //this.removeChild(scoreBoard);
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     // add listener to reset game when click background
     background.addEventListener("click", onResetGame);
@@ -224,10 +215,6 @@ function onResetGame(e) {
     // kill event listener and add listener to start a new game again
     background.removeEventListener("click", onResetGame);
     background.addEventListener("click", onStartGame);
-
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHALLENGE SOLUTION
-    //scoreBoard.resetMe();
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     // reset the snake
     snake.resetMe();
@@ -246,24 +233,14 @@ function onTick(e) {
     if (!snake.getKilled()) {
         if (leftKey) {
             snake.go(MovingObject.LEFT);
-            //snake.direction = MovingObject.LEFT;
-            //snake.startMe();
         } else if (rightKey) {
             snake.go(MovingObject.RIGHT);
-            //snake.direction = MovingObject.RIGHT;
-            //snake.startMe();
         } else if (upKey) {
             snake.go(MovingObject.UP);
-            //snake.direction = MovingObject.UP;
-            //snake.startMe();
         } else if (downKey) {
             snake.go(MovingObject.DOWN);
-            //snake.direction = MovingObject.DOWN;
-            //snake.startMe();
         } else {
             snake.stopMe();
-            //snake.stop();
-            //snake.stopMe();
         }
     }
 

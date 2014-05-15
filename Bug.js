@@ -53,17 +53,20 @@ var Bug = function(myStage, myAssetManager, mySnake) {
 
     // ----------------------------------------------- event handlers
     function onCollisionTest(e) {
-        // radius collision detection
-        // Calculate difference between centres
-        var distX = snake.x - clip.x;
-        var distY = snake.y - clip.y;
-        // Get distance with Pythagoras
-        var dist = Math.sqrt((distX * distX) + (distY * distY))
-        // 69 is the sum of the radius
-        if (dist <= 40) {
-            // collision detection with snake
-            clip.dispatchEvent(eventBugEaten);
-            killMe();
+        // only do collision test on every other tick to save on processing
+        if (createjs.Ticker.getTicks() % 2 == 0) {
+            // radius collision detection
+            // Calculate difference between centres
+            var distX = snake.x - clip.x;
+            var distY = snake.y - clip.y;
+            // Get distance with Pythagoras
+            var dist = Math.sqrt((distX * distX) + (distY * distY))
+            // 69 is the sum of the radius
+            if (dist <= 40) {
+                // collision detection with snake
+                clip.dispatchEvent(eventBugEaten);
+                killMe();
+            }
         }
     }
 
@@ -76,9 +79,6 @@ var Bug = function(myStage, myAssetManager, mySnake) {
     }
 
     function onKilled(e) {
-
-        //console.log("bug killed");
-
         // cleanup event listeners
         clip.off("animationend", onKilled);
         // remove displayobject

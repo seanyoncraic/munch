@@ -1,8 +1,9 @@
-var Snake = function(myStage, myAssetManager) {
+var Snake = function(myStage, myAssetManager, myGameConstants) {
     // initialization
     var stage = myStage;
     var assetManager = myAssetManager;
-    var SNAKE_MAX_SPEED = 5;
+    var gameConstants = myGameConstants;
+    //var SNAKE_MAX_SPEED = 5;
     var killed = false;
     var slowDownDelay = 5000;
     var slowDownTimer = null;
@@ -11,7 +12,7 @@ var Snake = function(myStage, myAssetManager) {
 
     // construct custom event objects
     var eventSnakeKilled = new createjs.Event("onSnakeKilled", true);
-    var eventSnakeSlowed = new createjs.Event("onSnakeSlowed", true);
+    var onSnakeSpeedChange = new createjs.Event("onSnakeSpeedChange", true);
 
     // grab clip for Snake and add to stage canvas
     var clip = new MovingObject(assetManager.getSpriteSheet("Snake"), stage);
@@ -43,13 +44,14 @@ var Snake = function(myStage, myAssetManager) {
         clip.gotoAndStop(1);
         clip.x = 280;
         clip.y = 300;
-        clip.speed = SNAKE_MAX_SPEED;
+        clip.speed = gameConstants.SNAKE_MAX_SPEED;
     };
 
     this.energizeMe = function() {
         // snake can only gain more energy if less than maximum
-        if (clip.speed < SNAKE_MAX_SPEED) {
-            clip.speed = this.speed + 1;
+        if (clip.speed < gameConstants.SNAKE_MAX_SPEED) {
+            clip.speed = clip.speed + 1;
+            clip.dispatchEvent(onSnakeSpeedChange);
         }
         // reset slowdown timer so the interval starts again
         clearInterval(slowDownTimer);
@@ -79,7 +81,7 @@ var Snake = function(myStage, myAssetManager) {
     function onSlowMe() {
         // adjust speed of MovingObject
         clip.speed = clip.speed - 1;
-        clip.dispatchEvent(eventSnakeSlowed);
+        clip.dispatchEvent(onSnakeSpeedChange);
         // check if snake is dead
         if (clip.speed <= 0) {
             myScope.killMe();
